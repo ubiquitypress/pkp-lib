@@ -23,7 +23,20 @@
 	</div>
 
 	<div class="pkp_workflow_content">
-
+		<div>
+			<div class="pkp_controllers_grid">
+				<div class="header -isOneLine">
+					<span class="pkpHeader__title">
+						<h4 id="usersTableLabel" class="pkpHeader__title">Revisions</h4>
+					</span>
+					<div class="pkpHeader__actions actions">
+						<a href="{url router=PKP\core\PKPApplication::ROUTE_PAGE page="revisions" op="index" submissionId=$submission->getId() stageId=$stageId roundId=$reviewRoundId }">
+						    Upload Revisions
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
 		{* Review files grid *}
 		{capture assign=reviewFileSelectionGridUrl}{url router=PKP\core\PKPApplication::ROUTE_COMPONENT component="grid.files.review.EditorReviewFilesGridHandler" op="fetchGrid" submissionId=$submission->getId() stageId=$stageId reviewRoundId=$reviewRoundId escape=false}{/capture}
 		{load_url_in_div id="reviewFileSelection-round_"|concat:$reviewRoundId url=$reviewFileSelectionGridUrl}
