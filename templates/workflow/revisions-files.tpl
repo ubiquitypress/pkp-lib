@@ -25,15 +25,17 @@
         </div>
 
         <h1 class="app__pageHeading" ref="pageTitle">
-            File uploaded
+            Revisions uploaded
         </h1>
 
         <panel>
             <panel-section>
                 <template #header>
-                    <legend class="pkpFormGroup__legend">Upload revisions</legend>
+                    <legend class="pkpFormGroup__legend">Revisions Uploaded</legend>
                     <div class="pkpFormGroup__description">
-                        Prepare your revision files to be assessed by our editorial team. Upload revised versions of your original submission files where appropriate, as well as any new files that may have been requested.
+                        Your revised files have been submitted. The editor has been notified and will contact you once they have been processed.
+                        <br/><br/>
+                        Should you need to change the files or contact the editor regarding the revisions process, please use the Discussions function on the previous page.
                     </div>
                 </template>
 
@@ -67,5 +69,15 @@
                 </div>
             </panel-section>
         </panel>
+        <button-row class="submissionWizard__footer">
+            <template #end>
+                <pkp-button
+                    element="a"
+                    href="{$workflowUrl|escape}"
+                >
+                    {translate key="common.back"}
+                </pkp-button>
+            </template>
+        </button-row>
     </div>
 {/block}
