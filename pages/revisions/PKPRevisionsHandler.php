@@ -16,7 +16,6 @@
 
 namespace PKP\pages\revisions;
 
-use APP\components\forms\submission\ReconfigureSubmission;
 use APP\core\Application;
 use APP\core\Request;
 use APP\facades\Repo;
@@ -31,7 +30,6 @@ use PKP\components\forms\publication\PKPCitationsForm;
 use PKP\components\forms\publication\TitleAbstractForm;
 use PKP\components\forms\submission\CommentsForTheEditors;
 use PKP\components\forms\submission\ConfirmSubmission;
-use PKP\components\forms\submission\ForTheEditors;
 use PKP\components\forms\submission\PKPSubmissionFileForm;
 use PKP\components\listPanels\ContributorsListPanel;
 use PKP\context\Context;
@@ -61,7 +59,6 @@ abstract class PKPRevisionsHandler extends Handler
         $this->addRoleAssignment(
             [
                 Role::ROLE_ID_AUTHOR,
-                Role::ROLE_ID_SUB_EDITOR,
                 Role::ROLE_ID_MANAGER,
                 Role::ROLE_ID_SITE_ADMIN,
             ],
@@ -142,6 +139,17 @@ abstract class PKPRevisionsHandler extends Handler
 
         $submissionFilesListPanel = $this->getSubmissionFilesListPanel($request, $submission, $genres, $roundId);
 
+        $currentWorkflowUrl = Application::get()->getRequest()->url(
+            $context->getPath(),
+            'dashboard',
+            'editorial',
+            null,
+            [
+                'currentViewId' => $currentViewId,
+                'workflowSubmissionId' => $submission->getId()
+            ]
+        );
+
         $templateMgr = TemplateManager::getManager($request);
         $templateMgr->setState([
             //'categories' => Repo::category()->getBreadcrumbs($categories),
@@ -158,6 +166,10 @@ abstract class PKPRevisionsHandler extends Handler
             'i18nUnableToSave' => __('submission.wizard.unableToSave'),
             'i18nUnsavedChanges' => __('common.unsavedChanges'),
             'i18nUnsavedChangesMessage' => __('common.unsavedChangesMessage'),
+            'submissionSavedUrl' => $this->getSubmissionSavedUrl($request, $submission->getId()),
+            'submissionWizardUrl' => $currentWorkflowUrl,
+            'submitApiUrl' => $this->getSubmitApiUrl($request, $submission->getId()),
+            'ReviewRoundId' => $roundId,
         ]);
 
         $templateMgr->assign([
@@ -166,25 +178,12 @@ abstract class PKPRevisionsHandler extends Handler
             'pageComponent' => 'SubmissionWizardPage',
             'pageTitle' => __('submission.wizard.title'),
             'submission' => $submission,
+            'workflowUrl' => $currentWorkflowUrl,
         ]);
 
-        $templateMgr->assign(['step' => [
-            'id' => 'files',
-            'name' => __('submission.upload.uploadFiles'),
-            'reviewName' => __('submission.files'),
-            'sections' => [
-                [
-                    'id' => 'files',
-                    'name' => __('submission.upload.uploadFiles'),
-                    'type' => self::SECTION_TYPE_FILES,
-                    'description' => $request->getContext()->getLocalizedData('uploadFilesHelp'),
-                ],
-            ],
-            'reviewTemplate' => '/workflow/revisions-files.tpl',
-        ]]);
+        $revisionsFilesSubmitted = $publication->getData('revisionsFilesSubmitted');
 
-        if ($submitted) 
-        {
+        if ($revisionsFilesSubmitted > 0) {
             $templateMgr->display('/workflow/revisions-files.tpl');
         } else {
             $templateMgr->display('revisions/revisions.tpl');
@@ -255,7 +254,7 @@ abstract class PKPRevisionsHandler extends Handler
                 $request,
                 Application::ROUTE_API,
                 $request->getContext()->getPath(),
-                'submissions/' . $submissionId . '/submit'
+                'submissions/' . $submissionId . '/submitRevisions'
             );
     }
 
@@ -333,7 +332,7 @@ abstract class PKPRevisionsHandler extends Handler
      */
     protected function getSubmissionFilesListPanel(Request $request, Submission $submission, array $genres, int $roundId): array
     {
-        $stageId = SubmissionFile::SUBMISSION_FILE_REVIEW_FILE;
+        $stageId = SubmissionFile::SUBMISSION_FILE_REVIEW_REVISION;
         $submissionFiles = Repo::submissionFile()
             ->getCollector()
             ->filterBySubmissionIds([$submission->getId()])
@@ -344,7 +343,6 @@ abstract class PKPRevisionsHandler extends Handler
             $this->getSubmissionFilesApiUrl($request, $submission->getId()),
             $genres
         );
-error_log(print_r(SubmissionFile::SUBMISSION_FILE_REVIEW_FILE, true));
         return [
             'addFileLabel' => __('common.addFile'),
             'apiUrl' => $this->getSubmissionFilesApiUrl($request, $submission->getId()),
@@ -352,7 +350,7 @@ error_log(print_r(SubmissionFile::SUBMISSION_FILE_REVIEW_FILE, true));
             'genrePromptLabel' => __('submission.submit.genre.label'),
             'emptyLabel' => __('submission.upload.instructions'),
             'emptyAddLabel' => __('common.upload.addFile'),
-            'fileStage' => SubmissionFile::SUBMISSION_FILE_REVIEW_FILE,
+            'fileStage' => SubmissionFile::SUBMISSION_FILE_REVIEW_REVISION,
             'form' => $form->getConfig(),
             'genres' => array_map(
                 fn ($genre) => [
@@ -480,8 +478,8 @@ error_log(print_r(SubmissionFile::SUBMISSION_FILE_REVIEW_FILE, true));
     /**
      * Submit the revisions files
      */
-     protected function Submit(int $publicationId, int $roundId)
-     {
+    protected function Submit(int $publicationId, int $roundId)
+    {
         $publicationDao = DAORegistry::getDAO('PublicationDAO');
         $settingName = 'revisionsSubmited';
         $settingValue = $roundId;
@@ -489,7 +487,7 @@ error_log(print_r(SubmissionFile::SUBMISSION_FILE_REVIEW_FILE, true));
             // Add or update the custom setting for the publication
             $publicationDao->updateSetting($publicationId, $settingName, $settingValue, '');
         }
-     }
+    }
 
     /**
      * Get the state for the details step
@@ -708,7 +706,7 @@ error_log(print_r(SubmissionFile::SUBMISSION_FILE_REVIEW_FILE, true));
     protected function getWorkflowUrl(Submission $submission, User $user): string
     {
         $request = Application::get()->getRequest();
-        
+
         // Replaces StageAssignmentDAO::getBySubmissionAndRoleIds
         $hasStageAssignments = StageAssignment::withSubmissionIds([$submission->getId()])
             ->withRoleIds([Role::ROLE_ID_AUTHOR])
@@ -752,7 +750,8 @@ error_log(print_r(SubmissionFile::SUBMISSION_FILE_REVIEW_FILE, true));
      */
     protected function getConfirmSubmitMessage(Submission $submission, Context $context): string
     {
-        return __('submission.wizard.confirmSubmit', ['context' => htmlspecialchars($context->getLocalizedName())]);
+        return 'Are you sure you want to submit these revisions? The editors will be notified that your revisions are ready for review';
+        //return __('revisions.confirmSubmit');
     }
 
     /**
