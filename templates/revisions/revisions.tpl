@@ -33,48 +33,33 @@
                 </submission-files-list-panel>
             </panel-section>
         </panel>
-
         <button-row class="submissionWizard__footer">
             <template #end>
                 <pkp-button
-                    v-if="!isOnFirstStep"
-                    :is-warnable="true"
-                    @click="previousStep"
+                    element="a"
+                    href="{$workflowUrl|escape}"
                 >
                     {translate key="common.back"}
                 </pkp-button>
             </template>
-            <div class="previewButton">
-                <span
-                    role="status"
-                    aria-live="polite"
-                    class="submissionWizard__lastSaved"
-                    :class="isDisconnected ? 'submissionWizard__lastSaved--disconnected' : ''"
-                >
-                    <spinner v-if="isAutosaving || isDisconnected"></spinner>
-
-                    <template v-if="isAutosaving">
-                        {translate key="common.saving"}
-                    </template>
-
-                    <template v-else-if="isDisconnected">
-                        {translate key="common.reconnecting"}
-                    </template>
-
-                    <template v-else-if="lastAutosavedMessage">
-                        {{ lastAutosavedMessage }}
-                    </template>
-                </span>
-                <pkp-button
-                    :is-disabled="isDisconnected"
-                    @click="saveForLater"
-                >
-                    {translate key="reviewer.submission.saveReviewForLater"}
-                </pkp-button>
-                <pkp-button element="a" :is-primary="true" href="">
-                    Submit
-                </pkp-button>
-            </div>
+            <pkp-button
+                element="a"
+                href="{$workflowUrl|escape}"
+            >
+                {translate key="reviewer.submission.saveReviewForLater"}
+            </pkp-button>
+            <pkp-button
+                :is-primary="true"
+                :is-disabled="isOnLastStep && !canSubmit"
+                @click="nextStep"
+            >
+                <template v-if="isOnLastStep">
+                    {translate key="form.submit"}
+                </template>
+                <template v-else>
+                    {translate key="common.continue"}
+                </template>
+            </pkp-button>
         </button-row>
     </div>
 {/block}
