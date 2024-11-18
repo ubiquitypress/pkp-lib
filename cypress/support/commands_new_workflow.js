@@ -144,12 +144,10 @@ Cypress.Commands.add('setLocale', locale => {
 Cypress.Commands.add('resetPassword', (username,oldPassword,newPassword) => {
 	oldPassword = oldPassword || (username + username);
 	newPassword = newPassword || oldPassword;
-	cy.visit('index.php/publicknowledge/user/profile');
-	cy.get('a[name=changePassword]').click();
 	cy.get('input[name=oldPassword]').type(oldPassword, {delay: 0});
 	cy.get('input[name=password]').type(newPassword, {delay: 0});
 	cy.get('input[name=password2]').type(newPassword, {delay: 0});
-	cy.get('button').contains('Save').click({ force: true });
+	cy.get('button').contains('OK').click();
 });
 
 Cypress.Commands.add('register', data => {
@@ -605,6 +603,34 @@ Cypress.Commands.add('performReview', (username, password, title, recommendation
 	cy.logout();
 });
 
+Cypress.Commands.add('createUser', user => {
+	if (!('email' in user)) user.email = user.username + '@mailinator.com';
+	if (!('password' in user)) user.password = user.username + user.username;
+	if (!('password2' in user)) user.password2 = user.username + user.username;
+	if (!('roles' in user)) user.roles = [];
+	cy.get('div[id=userGridContainer] a:contains("Add User")').click();
+	cy.wait(2000); // Avoid occasional glitches with given name field
+	cy.get('input[id^="givenName-en"]').type(user.givenName, {delay: 0});
+	cy.get('input[id^="familyName-en"]').type(user.familyName, {delay: 0});
+	cy.get('input[name=email]').type(user.email, {delay: 0});
+	cy.get('input[name=username]').type(user.username, {delay: 0});
+	cy.get('input[name=password]').type(user.password, {delay: 0});
+	cy.get('input[name=password2]').type(user.password2, {delay: 0});
+	if (!user.mustChangePassword) {
+		cy.get('input[name="mustChangePassword"]').click();
+	}
+	cy.get('select[name=country]').select(user.country);
+	cy.contains('More User Details').click();
+	cy.get('span:contains("Less User Details"):visible');
+	cy.get('input[id^="affiliation-en"]').type(user.affiliation, {delay: 0});
+	cy.get('form[id=userDetailsForm]').find('button[id^=submitFormButton]').click();
+	user.roles.forEach(role => {
+		cy.get('form[id=userRoleForm]').contains(role).click();
+	});
+	cy.get('form[id=userRoleForm] button[id^=submitFormButton]').click();
+	cy.waitJQuery();
+});
+
 Cypress.Commands.add('flushNotifications', function() {
 	cy.window().then(win => {
 		if (typeof pkp !== 'undefined' && typeof pkp.eventBus !== 'undefined') {
@@ -807,7 +833,7 @@ Cypress.Commands.add('checkDoiMarkedStatus', (status, itemId, isValid, expectedS
 
 	cy.get(`#list-item-${itemType}-${itemId} .pkpBadge`).contains(expectedStatus);
 	if (!isValid) {
-		cy.get(`div[role=dialog] button:contains('Close')`).click();
+		cy.get(`div[role=dialog] button:contains('OK')`).click();
 	}
 });
 
@@ -934,15 +960,13 @@ Cypress.Commands.add('confirmationByUser', user => {
 	cy.get('.pkpButton').contains('View All Submissions').click();
 });
 
-Cypress.Commands.add('createUser', user => {
+Cypress.Commands.add('createUserByInvitation', user => {
 	cy.login('admin','admin','publicknowledge')
 	cy.wait(1000)
 	cy.inviteUser(user);
 	cy.logout();
-
 	cy.confirmEmail(user);
 	cy.wait(1000)
-
 	cy.confirmationByUser(user);
 	cy.logout();
 

@@ -238,7 +238,6 @@ class PKPReviewerGridHandler extends GridHandler
                     new AjaxModal(
                         $router->url($request, null, null, 'showReviewerForm', null, $actionArgs),
                         __('editor.submission.addReviewer'),
-                        'modal_add_user'
                     ),
                     __('editor.submission.addReviewer'),
                     'add_user'
@@ -473,10 +472,12 @@ class PKPReviewerGridHandler extends GridHandler
     {
         $context = $request->getContext();
         $term = $request->getUserVar('term');
-
-        $users = Repo::user()->getCollector()
-            ->filterExcludeRoles([Role::ROLE_ID_REVIEWER])
+        $reviewerUserGroupIds = Repo::userGroup()->getCollector()
             ->filterByContextIds([$context->getId()])
+            ->filterByRoleIds([Role::ROLE_ID_REVIEWER])
+            ->getIds();
+        $users = Repo::user()->getCollector()
+            ->filterExcludeUserGroupIds(iterator_to_array($reviewerUserGroupIds))
             ->searchPhrase($term)
             ->getMany();
 
