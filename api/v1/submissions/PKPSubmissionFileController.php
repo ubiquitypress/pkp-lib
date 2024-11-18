@@ -318,7 +318,8 @@ class PKPSubmissionFileController extends PKPBaseController
         $params['fileId'] = $fileId;
         $params['submissionId'] = $submission->getId();
         $params['uploaderUserId'] = (int) $request->getUser()->getId();
-
+        $params['assocType'] = $params['assocType'] ?: '';
+        $params['assocId'] = $params['assocId'] ?: '';
         $submissionLocale = $submission->getData('locale');
         $allowedLocales = $request->getContext()->getSupportedSubmissionMetadataLocales();
 
