@@ -86,6 +86,7 @@ class PKPSubmissionController extends PKPBaseController
         'edit',
         'saveForLater',
         'submit',
+        'submitRevisions',
         'delete',
         'changeLocale',
         'getGalleys',
@@ -335,6 +336,10 @@ class PKPSubmissionController extends PKPBaseController
 
             Route::put('{submissionId}/submit', $this->submit(...))
                 ->name('submission.submit')
+                ->whereNumber('submissionId');
+
+            Route::put('{submissionId}/submitRevisions', $this->submitRevisions(...))
+                ->name('submission.submitRevisions')
                 ->whereNumber('submissionId');
         });
 
@@ -857,6 +862,36 @@ class PKPSubmissionController extends PKPBaseController
         $genres = $genreDao->getByContextId($submission->getData('contextId'))->toArray();
 
         return response()->json(Repo::submission()->getSchemaMap()->map($submission, $userGroups, $genres), Response::HTTP_OK);
+    }
+
+    /**
+     * Submit revisions
+     *
+     * Submits revisions by authors
+     *
+     */
+    public function submitRevisions(Request $illuminateRequest): JsonResponse
+    {
+        $request = $this->getRequest();
+        $context = $request->getContext();
+        $submission = $this->getAuthorizedContextObject(Application::ASSOC_TYPE_SUBMISSION);
+        $publication = $submission->getCurrentPublication();
+        $params['revisionsFilesSubmitted'] = 1;
+        $newPublication = Repo::publication()->edit($publication, $params);
+        $eventLog = Repo::eventLog()->newDataObject([
+            'assocType' => PKPApplication::ASSOC_TYPE_SUBMISSION,
+            'assocId' => $submission->getId(),
+            'eventType' => SubmissionEventLogEntry::SUBMISSION_LOG_AUTHOR_REVISION,
+            'userId' => Validation::loggedInAs() ?? $user->getId(),
+            'message' => 'The revisions files have been submitted by the author',
+            'isTranslated' => false,
+            'dateLogged' => Core::getCurrentDate(),
+            'username' => $user->getUsername(),
+            'userFullName' => $user->getFullName(),
+            'copyrightNotice' => $context->getData('copyrightNotice'),
+        ]);
+
+        return response()->json(Response::HTTP_OK);
     }
 
     /**
