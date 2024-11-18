@@ -331,6 +331,13 @@
 			"validation": [
 				"min:1"
 			]
+		},
+		"revisionsFilesSubmitted": {
+			"type": "integer",
+			"description": "If the revisions files of this publication is submitted",
+			"validation": [
+				"min:1"
+			]
 		}
 	}
 }
