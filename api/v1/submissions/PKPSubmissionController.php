@@ -878,19 +878,18 @@ class PKPSubmissionController extends PKPBaseController
         $publication = $submission->getCurrentPublication();
         $params['revisionsFilesSubmitted'] = 1;
         $newPublication = Repo::publication()->edit($publication, $params);
+        $user = $request->getUser();
         $eventLog = Repo::eventLog()->newDataObject([
             'assocType' => PKPApplication::ASSOC_TYPE_SUBMISSION,
             'assocId' => $submission->getId(),
-            'eventType' => SubmissionEventLogEntry::SUBMISSION_LOG_AUTHOR_REVISION,
-            'userId' => Validation::loggedInAs() ?? $user->getId(),
-            'message' => 'The revisions files have been submitted by the author',
+            'eventType' => PKPSubmissionEventLogEntry::SUBMISSION_LOG_REVISION_SUBMITTED,
+            'userId' => $user->getId(),
+            'message' => 'The revisions files have been submitted',
             'isTranslated' => false,
             'dateLogged' => Core::getCurrentDate(),
-            'username' => $user->getUsername(),
-            'userFullName' => $user->getFullName(),
-            'copyrightNotice' => $context->getData('copyrightNotice'),
         ]);
 
+        Repo::eventLog()->add($eventLog);
         return response()->json(Response::HTTP_OK);
     }
 
