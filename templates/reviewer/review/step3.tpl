@@ -16,16 +16,14 @@
 	{rdelim});
 </script>
 
-<form class="pkp_form" id="reviewStep3Form" method="post"
-    action="{url op="saveStep" path=$submission->getId() step="3"}"
-    aria-describedby="reviewStep3MessageBox">
+<form class="pkp_form" id="reviewStep3Form" method="post" action="{url op="saveStep" path=$submission->getId() step="3"}">
 	<input type="hidden" name="isSave" />{* @see ReviewerReviewStep3FormHandler.js *}
 	{csrf}
 	{include file="controllers/notification/inPlaceNotification.tpl" notificationId="reviewStep3FormNotification"}
 
 {fbvFormArea id="reviewStep3"}
 
-	{capture assign="reviewFilesGridUrl"}{url router=PKP\core\PKPApplication::ROUTE_COMPONENT component="grid.files.review.ReviewerReviewFilesGridHandler" op="fetchGrid" submissionId=$submission->getId() stageId=$reviewAssignment->getStageId() reviewRoundId=$reviewRoundId reviewAssignmentId=$reviewAssignment->getId() escape=false}{/capture}
+	{capture assign="reviewFilesGridUrl"}{url router=\PKP\core\PKPApplication::ROUTE_COMPONENT component="grid.files.review.ReviewerReviewFilesGridHandler" op="fetchGrid" submissionId=$submission->getId() stageId=$reviewAssignment->getStageId() reviewRoundId=$reviewRoundId reviewAssignmentId=$reviewAssignment->getId() escape=false}{/capture}
 	{load_url_in_div id="reviewFilesStep3" url=$reviewFilesGridUrl}
 
 	{if $viewGuidelinesAction}
@@ -55,31 +53,19 @@
 	{/if}
 
 	{fbvFormSection label="common.upload" description="reviewer.submission.uploadDescription"}
-		{capture assign="reviewAttachmentsGridUrl"}{url router=PKP\core\PKPApplication::ROUTE_COMPONENT component="grid.files.attachment.ReviewerReviewAttachmentsGridHandler" op="fetchGrid" assocType=$smarty.const.ASSOC_TYPE_REVIEW_ASSIGNMENT assocId=$reviewAssignment->getId() submissionId=$submission->getId() stageId=$reviewAssignment->getStageId() reviewIsClosed=$reviewIsClosed escape=false}{/capture}
+		{capture assign="reviewAttachmentsGridUrl"}{url router=\PKP\core\PKPApplication::ROUTE_COMPONENT component="grid.files.attachment.ReviewerReviewAttachmentsGridHandler" op="fetchGrid" assocType=$smarty.const.ASSOC_TYPE_REVIEW_ASSIGNMENT assocId=$reviewAssignment->getId() submissionId=$submission->getId() stageId=$reviewAssignment->getStageId() reviewIsClosed=$reviewIsClosed escape=false}{/capture}
 		{load_url_in_div id="reviewAttachmentsGridContainer" url=$reviewAttachmentsGridUrl}
 	{/fbvFormSection}
 
 	<!-- Display queries grid -->
-	{capture assign="queriesGridUrl"}{url router=PKP\core\PKPApplication::ROUTE_COMPONENT component="grid.queries.QueriesGridHandler" op="fetchGrid" submissionId=$submission->getId() stageId=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW escape=false}{/capture}
+	{capture assign="queriesGridUrl"}{url router=\PKP\core\PKPApplication::ROUTE_COMPONENT component="grid.queries.QueriesGridHandler" op="fetchGrid" submissionId=$submission->getId() stageId=$smarty.const.WORKFLOW_STAGE_ID_EXTERNAL_REVIEW escape=false}{/capture}
 	{load_url_in_div id="queriesGrid" url=$queriesGridUrl}	
 
 	{$additionalFormFields}
 
 	{capture assign="cancelUrl"}{url page="reviewer" op="submission" path=$submission->getId() step=2 escape=false}{/capture}
-	<div id="reviewStep3Actions">
-		{fbvFormButtons submitText="reviewer.submission.submitReview" confirmSubmit="reviewer.confirmSubmit" modalStyle="primary" saveText="reviewer.submission.saveReviewForLater" cancelText="navigation.goBack" cancelUrl=$cancelUrl cancelUrlTarget="_self" submitDisabled=$reviewIsClosed}
-	</div>
-
-	<div id="reviewStep3MessageBox" class="pkp_notification" style="display:none; margin-top:12px;">
-		{include
-			file="controllers/notification/inPlaceNotificationContent.tpl"
-			notificationId="reviewStep3MessageBoxContent"
-			notificationStyleClass="notifyError"
-			notificationTitle={"reviewer.submission.reviewFormResponse.form.responseRequired"|translate}
-			notificationContents={"reviewer.submission.reviewFormResponse.form.notFilledIn"|translate}
-		}
-	</div>
+	{fbvFormButtons submitText="reviewer.submission.submitReview" confirmSubmit="reviewer.confirmSubmit" saveText="reviewer.submission.saveReviewForLater" cancelText="navigation.goBack" cancelUrl=$cancelUrl cancelUrlTarget="_self" submitDisabled=$reviewIsClosed}
 {/fbvFormArea}
 
-<!--<p><span class="formRequired">{translate key="common.requiredField"}</span></p>-->
+<p><span class="formRequired">{translate key="common.requiredField"}</span></p>
 </form>

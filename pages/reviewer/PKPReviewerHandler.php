@@ -172,8 +172,14 @@ class PKPReviewerHandler extends Handler
         $reviewerForm = $this->getReviewForm($step, $request, $reviewSubmission, $reviewAssignment);
         $reviewerForm->readInputData();
 
+        // Autosave: save without validation
+        if ($request->getUserVar('isAutosave')) {
+            /** @var PKPReviewerReviewStep3Form $reviewerForm */
+            $reviewerForm->saveForLater();
+            return new JSONMessage(true);
+        }
         // Save the available form data, but do not submit
-        if ($request->getUserVar('isSave')) {
+        elseif ($request->getUserVar('isSave')) {
             /** @var PKPReviewerReviewStep3Form $reviewerForm */
             $reviewerForm->saveForLater();
             $notificationMgr = new NotificationManager();
